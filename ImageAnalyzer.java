@@ -12,46 +12,45 @@ public class ImageAnalyzer {
 	
 	public static void main(String[] args) {
 		System.out.println("* Image Analyzer *");
-		if (args.length == 0 || args.length == 2) {
-			Scanner input = new Scanner(System.in);
-			String directoryLocation;
-			if (args.length == 0) {
-				System.out.print("Enter a directory location to analyze: ");
-				directoryLocation = input.nextLine();
+		if (args.length != 0 && args.length != 2) {
+			error("This program's usage is as follows:\n" +
+					"java ImageAnalyzer\n" +
+					"java ImageAnalyzer <directory location> <palette size option>");
+		}
+		Scanner input = new Scanner(System.in);
+		String directoryLocation;
+		if (args.length == 0) {
+			System.out.print("Enter a directory location to analyze: ");
+			directoryLocation = input.nextLine();
+		} else {
+			directoryLocation = args[0];
+		}
+		String paletteSizeOption;
+		if (args.length == 0) {
+			System.out.println("Select the palette size to analyze by:");
+			System.out.println("1) 4 colors");
+			System.out.println("2) 6 colors");
+			System.out.println("3) 8 colors");
+			System.out.print("Palette size option: ");
+			paletteSizeOption = input.nextLine();
+		} else {
+			paletteSizeOption = args[1];
+		}
+		input.close();
+		File directory = new File(directoryLocation);
+		if (directory.isDirectory()) {
+			if (isValidInteger(paletteSizeOption) && Integer.parseInt(paletteSizeOption) >= 1 &&
+					Integer.parseInt(paletteSizeOption) <= 3) {
+				grayscaleAmount = 255 / ((Integer.parseInt(paletteSizeOption) * 2) + 1);
+				System.out.println("(Please wait a few seconds for the images to load.)");
+				analyzeImagesFromDirectory(directory);
+				System.out.println("Total images checked: " + totalImagesChecked);
+				System.out.println("Total valid images: " + totalValidImages);
 			} else {
-				directoryLocation = args[0];
-			}
-			String paletteSizeOption;
-			if (args.length == 0) {
-				System.out.println("Select the palette size to analyze by:");
-				System.out.println("1) 4 colors");
-				System.out.println("2) 6 colors");
-				System.out.println("3) 8 colors");
-				System.out.print("Palette size option: ");
-				paletteSizeOption = input.nextLine();
-			} else {
-				paletteSizeOption = args[1];
-			}
-			input.close();
-			File directory = new File(directoryLocation);
-			if (directory.isDirectory()) {
-				if (isValidInteger(paletteSizeOption) && Integer.parseInt(paletteSizeOption) >= 1 &&
-						Integer.parseInt(paletteSizeOption) <= 3) {
-					grayscaleAmount = 255 / ((Integer.parseInt(paletteSizeOption) * 2) + 1);
-					System.out.println("(Please wait a few seconds for the images to load.)");
-					analyzeImagesFromDirectory(directory);
-					System.out.println("Total images checked: " + totalImagesChecked);
-					System.out.println("Total valid images: " + totalValidImages);
-				} else {
-					System.out.println("Error: Invalid palette size option.");
-				}
-			} else {
-				System.out.println("Error: " + directoryLocation + " is not a valid directory.");
+				System.out.println("Error: Invalid palette size option.");
 			}
 		} else {
-			System.out.println("This program's usage is as follows:");
-			System.out.println("java ImageAnalyzer");
-			System.out.println("java ImageAnalyzer <directory location> <palette size option>");
+			System.out.println("Error: " + directoryLocation + " is not a valid directory.");
 		}
 	}
 	

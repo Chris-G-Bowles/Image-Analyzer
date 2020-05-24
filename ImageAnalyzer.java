@@ -25,23 +25,23 @@ public class ImageAnalyzer {
 		} else {
 			directoryLocation = args[0];
 		}
-		String paletteSizeOption;
+		String paletteSizeString;
 		if (args.length == 0) {
 			System.out.println("Select the palette size to analyze by:");
 			System.out.println("1) 4 colors");
 			System.out.println("2) 6 colors");
 			System.out.println("3) 8 colors");
 			System.out.print("Palette size option: ");
-			paletteSizeOption = input.nextLine();
+			paletteSizeString = input.nextLine();
 		} else {
-			paletteSizeOption = args[1];
+			paletteSizeString = args[1];
 		}
 		input.close();
 		File directory = new File(directoryLocation);
 		if (directory.isDirectory()) {
-			if (isValidInteger(paletteSizeOption) && Integer.parseInt(paletteSizeOption) >= 1 &&
-					Integer.parseInt(paletteSizeOption) <= 3) {
-				grayscaleAmount = 255 / ((Integer.parseInt(paletteSizeOption) * 2) + 1);
+			if (isValidInteger(paletteSizeString) && Integer.parseInt(paletteSizeString) >= 1 &&
+					Integer.parseInt(paletteSizeString) <= 3) {
+				grayscaleAmount = 255 / ((Integer.parseInt(paletteSizeString) * 2) + 1);
 				System.out.println("(Please wait a few seconds for the images to load.)");
 				analyzeImagesFromDirectory(directory);
 				System.out.println("Total images checked: " + totalImagesChecked);

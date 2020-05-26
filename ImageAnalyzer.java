@@ -25,6 +25,10 @@ public class ImageAnalyzer {
 		} else {
 			directoryLocation = args[0];
 		}
+		File directory = new File(directoryLocation);
+		if (!directory.isDirectory()) {
+			error(directoryLocation + " is not a valid directory.");
+		}
 		String paletteSizeString;
 		if (args.length == 0) {
 			System.out.println("Select the palette size to analyze by:");
@@ -36,41 +40,43 @@ public class ImageAnalyzer {
 		} else {
 			paletteSizeString = args[1];
 		}
-		input.close();
-		File directory = new File(directoryLocation);
-		if (directory.isDirectory()) {
-			if (isValidInteger(paletteSizeString) && Integer.parseInt(paletteSizeString) >= 1 &&
-					Integer.parseInt(paletteSizeString) <= 3) {
-				grayscaleAmount = 255 / ((Integer.parseInt(paletteSizeString) * 2) + 1);
-				System.out.println("(Please wait a few seconds for the images to load.)");
-				analyzeImagesFromDirectory(directory);
-				System.out.println("Total images checked: " + totalImagesChecked);
-				System.out.println("Total valid images: " + totalValidImages);
-			} else {
-				System.out.println("Error: Invalid palette size option.");
-			}
-		} else {
-			System.out.println("Error: " + directoryLocation + " is not a valid directory.");
+		Scanner lineInput = new Scanner(paletteSizeString);
+		if (!lineInput.hasNextInt()) {
+			error("Invalid palette size input.");
 		}
+		int paletteSizeOption = lineInput.nextInt();
+		if (paletteSizeOption < 1 || paletteSizeOption > 3) {
+			error("Invalid palette size option.");
+		}
+		lineInput.close();
+		grayscaleAmount = 255 / ((paletteSizeOption * 2) + 1);
+		input.close();
+		System.out.println("(Please wait a few seconds for the images to load.)");
+		analyzeImagesFromDirectory(directory);
+		System.out.println("Total images checked: " + totalImagesChecked);
+		System.out.println("Total valid images: " + totalValidImages);
 	}
 	
 	private static void analyzeImagesFromDirectory(File directory) {
-		File[] files = directory.listFiles();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isFile()) {
-				analyzeImageFromFile(files[i]);
-			} else if (files[i].isDirectory()) {
-				analyzeImagesFromDirectory(files[i]);
-			}
-		}
-	}
-	
-	private static void analyzeImageFromFile(File file) {
-		totalImagesChecked++;
-		try {
-			BufferedImage image = ImageIO.read(file);
-			if (image.getWidth() >= 1 && image.getWidth() <= 256 && image.getWidth() % 8 == 0 &&
-					image.getHeight() >= 1 && image.getHeight() <= 256 && image.getHeight() % 8 == 0) {
+		for (File file : directory.listFiles()) {
+			if (file.isFile()) {
+				totalImagesChecked++;
+				BufferedImage image;
+				try {
+					image = ImageIO.read(file);
+				} catch (Exception e) {
+					image = null;
+				}
+				if (image == null) {
+					System.out.println(file.getPath() + " does not contain a readable image, and is being skipped.");
+					return;
+				}
+				if (image.getWidth() < 1 || image.getWidth() > 256 || image.getWidth() % 8 != 0 ||
+						image.getHeight() < 1 || image.getHeight() > 256 || image.getHeight() % 8 != 0) {
+					System.out.println(file.getPath() + " has an invalid resolution of " +
+							image.getWidth() + "x" + image.getHeight() + " pixels, and is being skipped.");
+					return;
+				}
 				for (int y = 0; y < image.getHeight(); y++) {
 					for (int x = 0; x < image.getWidth(); x++) {
 						long argbValue = image.getRGB(x, y);
@@ -83,20 +89,17 @@ public class ImageAnalyzer {
 						long blueValue = argbValue % 256;
 						if (alphaValue != 255 || redValue != greenValue || redValue != blueValue ||
 								redValue % grayscaleAmount != 0) {
-							System.out.println("Error: " + file.getPath() + " has an invalid " +
-									"ARGB value at (" + x + ", " + y + "): [" + alphaValue +
-									", " + redValue + ", " + greenValue + ", " + blueValue + "].");
+							System.out.println(file.getPath() + " has an invalid ARGB value at (" + x + ", " + y +
+									"): [" + alphaValue + ", " + redValue + ", " + greenValue + ", " + blueValue +
+									"], and is being skipped.");
 							return;
 						}
 					}
 				}
 				totalValidImages++;
-			} else {
-				System.out.println("Error: " + file.getPath() + " has an invalid resolution of " +
-						image.getWidth() + "x" + image.getHeight() + " pixels.");
+			} else if (file.isDirectory()) {
+				analyzeImagesFromDirectory(file);
 			}
-		} catch (Exception e) {
-			System.out.println("Error: " + file.getPath() + " does not contain a readable image.");
 		}
 	}
 	

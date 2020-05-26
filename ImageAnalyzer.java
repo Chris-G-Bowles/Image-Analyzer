@@ -69,38 +69,45 @@ public class ImageAnalyzer {
 				}
 				if (image == null) {
 					System.out.println(file.getPath() + " does not contain a readable image, and is being skipped.");
-					return;
+					continue;
 				}
 				if (image.getWidth() < 1 || image.getWidth() > 256 || image.getWidth() % 8 != 0 ||
 						image.getHeight() < 1 || image.getHeight() > 256 || image.getHeight() % 8 != 0) {
 					System.out.println(file.getPath() + " has an invalid resolution of " +
 							image.getWidth() + "x" + image.getHeight() + " pixels, and is being skipped.");
-					return;
+					continue;
 				}
-				for (int y = 0; y < image.getHeight(); y++) {
-					for (int x = 0; x < image.getWidth(); x++) {
-						long argbValue = image.getRGB(x, y);
-						if (argbValue < 0) {
-							argbValue += 4294967296L;
-						}
-						long alphaValue = argbValue / 16777216;
-						long redValue = (argbValue / 65536) % 256;
-						long greenValue = (argbValue / 256) % 256;
-						long blueValue = argbValue % 256;
-						if (alphaValue != 255 || redValue != greenValue || redValue != blueValue ||
-								redValue % grayscaleAmount != 0) {
-							System.out.println(file.getPath() + " has an invalid ARGB value at (" + x + ", " + y +
-									"): [" + alphaValue + ", " + redValue + ", " + greenValue + ", " + blueValue +
-									"], and is being skipped.");
-							return;
-						}
-					}
+				if (!isValidImage(image, file.getPath())) {
+					continue;
 				}
 				totalValidImages++;
 			} else if (file.isDirectory()) {
 				analyzeImagesFromDirectory(file);
 			}
 		}
+	}
+	
+	private static boolean isValidImage(BufferedImage image, String fileLocation) {
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				long argbValue = image.getRGB(x, y);
+				if (argbValue < 0) {
+					argbValue += 4294967296L;
+				}
+				long alphaValue = argbValue / 16777216;
+				long redValue = (argbValue / 65536) % 256;
+				long greenValue = (argbValue / 256) % 256;
+				long blueValue = argbValue % 256;
+				if (alphaValue != 255 || redValue != greenValue || redValue != blueValue ||
+						redValue % grayscaleAmount != 0) {
+					System.out.println(fileLocation + " has an invalid ARGB value at (" + x + ", " + y + "): [" +
+							alphaValue + ", " + redValue + ", " + greenValue + ", " + blueValue +
+							"], and is being skipped.");
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	private static void error(String message) {
